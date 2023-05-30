@@ -29,31 +29,26 @@ function experiment(hiddenSize, classes, datasetPercentage, outputFilePath)
     end
     
     % Train the autoencoder
-    xtrain = {1,size(training.images, 3)};
-    for i=1:size(training.images, 3)
-        xtrain{i}=training.images(:,:,i);
-    end
-    
-    autoenc = trainAutoencoder(xtrain,hiddenSize,...
-            'L2WeightRegularization',0.004,...
-            'SparsityRegularization',4,...
-            'SparsityProportion',0.15,...
-            'MaxEpochs',100,...
-            'UseGPU', false);
+    % xtrain = {1,size(training.images, 3)};
+    % for i=1:size(training.images, 3)
+    %     xtrain{i}=training.images(:,:,i);
+    % end
+
+    autoenc = CustomAutoencoder(hiddenSize, training.images);
     
     % encode the training data
-    xencoded = encode(autoenc,xtrain);
-    xencoded = transpose(xencoded);
+    xencoded = autoenc.encode(training.images);
+    xencodedr = reshape(xencoded, hiddenSize, 12665);
+    xencodedt = transpose(xencodedr);
     
     % convert the labels to the range 1-N
     lt = LabelTransformer(unique(training.labels));
     transformedLabels = lt.transform(training.labels);
     
     % train the gmlvq model
-    gmlvq = GMLVQ.GMLVQ(xencoded, transformedLabels,GMLVQ.Parameters(), 30);
+    gmlvq = GMLVQ.GMLVQ(xencodedt, transformedLabels,GMLVQ.Parameters(), 30);
     
     result = gmlvq.runValidation(10,10);
-    result.plot();
     
     % decode the prototypes
     nPrototypes = size(result.averageRun.prototypes,1);
@@ -63,12 +58,13 @@ function experiment(hiddenSize, classes, datasetPercentage, outputFilePath)
         + repmat(result.averageRun.meanFeatures, nPrototypes, 1);
     prototypes = transpose(prototypes)              ;
     
-    origPrototypes = decode(autoenc, prototypes);
+    origPrototypes = autoenc.decode(prototypes);
     
     for i = 1:length(classes)
         subplot(1,length(classes),i);
-        imshow(origPrototypes{i});
+        imshow(squeeze(origPrototypes(:,:,:,i)));
     end
 
     save(outputFilePath, "autoenc", "result", "origPrototypes", "training", "test", "classes", "hiddenSize");
+    result.plot();
 end
