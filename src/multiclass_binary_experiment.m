@@ -1,6 +1,8 @@
-function custom_autoenc_experiment(hiddenSize, classes, datasetPercentage, outputFilePath)
+function multiclass_binary_experiment(hiddenSize, group1, group2, datasetPercentage, outputFilePath)
     % Load the mnist dataset
     load('data/mnist.mat');
+
+    classes = [group1 group2];
     
     % Keep only the labels that interest us
     idx = ismember(training.labels, classes);
@@ -42,11 +44,14 @@ function custom_autoenc_experiment(hiddenSize, classes, datasetPercentage, outpu
     xencodedt = transpose(xencodedr);
     
     % convert the labels to the range 1-N
-    lt = LabelTransformer(unique(training.labels));
-    transformedLabels = lt.transform(training.labels);
-    
+    transformedLabels = training.labels(:);
+    idx = ismember(transformedLabels, group1);
+    transformedLabels(idx) = 1;
+    transformedLabels(~idx) = 2;
+
     % train the gmlvq model
-    gmlvq = GMLVQ.GMLVQ(xencodedt, transformedLabels,GMLVQ.Parameters(), 30);
+    gmlvq = GMLVQ.GMLVQ(xencodedt, transformedLabels,GMLVQ.Parameters(), 30, ...
+        [1 1 2 2]);
     
     result = gmlvq.runValidation(10,10);
     
@@ -60,8 +65,8 @@ function custom_autoenc_experiment(hiddenSize, classes, datasetPercentage, outpu
     
     origPrototypes = autoenc.decode(prototypes);
     
-    for i = 1:length(classes)
-        subplot(1,length(classes),i);
+    for i = 1:size(origPrototypes,4)
+        subplot(1,size(origPrototypes,4),i);
         imshow(squeeze(origPrototypes(:,:,:,i)));
     end
 
