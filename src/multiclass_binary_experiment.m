@@ -1,4 +1,5 @@
-function multiclass_binary_experiment(hiddenSize, group1, group2, datasetPercentage, outputFilePath)
+function multiclass_binary_experiment(hiddenSize, group1, group2, prototypesPerGroup, ...
+    datasetPercentage, outputFilePath)
     % Load the mnist dataset
     load('data/mnist.mat');
 
@@ -51,7 +52,7 @@ function multiclass_binary_experiment(hiddenSize, group1, group2, datasetPercent
 
     % train the gmlvq model
     gmlvq = GMLVQ.GMLVQ(xencodedt, transformedLabels,GMLVQ.Parameters(), 30, ...
-        [1 1 2 2]);
+        [ones(1,prototypesPerGroup) ones(1,prototypesPerGroup)*2]);
     
     result = gmlvq.runValidation(10,10);
     
