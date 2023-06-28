@@ -10,3 +10,4 @@ protdiff2 = squeeze(origPrototypes(:,:,1,2) - origPrototypes(:,:,1,1));
 imshow(protdiff,[]);
 subplot(2,numprot,4);
 imshow(protdiff2,[]);
+
