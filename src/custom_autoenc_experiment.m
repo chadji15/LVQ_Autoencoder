@@ -28,12 +28,7 @@ function custom_autoenc_experiment(hiddenSize, classes, datasetPercentage, ...
         test.labels = test.labels(~idx);
         test.count = sum(~idx);
     end
-    
-    % Train the autoencoder
-    % xtrain = {1,size(training.images, 3)};
-    % for i=1:size(training.images, 3)
-    %     xtrain{i}=training.images(:,:,i);
-    % end
+
 
     autoenc = CustomAutoencoder(hiddenSize, training.images);
     

@@ -9,6 +9,7 @@ classdef CustomAutoencoder
     
     methods
         function obj = CustomAutoencoder(hiddenSize,images)
+           % autoencoder layers
            layers = [ 
                 imageInputLayer([28,28,1]) % 28x28x1
                 convolution2dLayer(5,6, "stride", 1) % 24x24x6
@@ -24,13 +25,15 @@ classdef CustomAutoencoder
                 tanhLayer % bound output to [0,1]
                 regressionLayer
             ];
-
+            
+            % training hyperparameters
             options = trainingOptions('adam', ...
                 'MaxEpochs',20,...
                 'InitialLearnRate',1e-4, ...
                 'Verbose',false, ...
                 'Plots','training-progress');
 
+            % train the network, use input as desired output
             net = trainNetwork(reshape(images, 28,28,1,[]), ...
                     reshape(images, 28,28,1,[]), ...
                     layers, ...
@@ -38,17 +41,21 @@ classdef CustomAutoencoder
             
             obj.net = net;
             obj.hiddenSize = hiddenSize;
+            % the point where the encoder ends
             obj.encoderLayer = 6;
+            % isolate the decoder
             obj.decoder = assembleNetwork( ...
                 [imageInputLayer([1 1 hiddenSize], "Normalization", "none"); ...
                 net.Layers(7:13)]);
         end
         
+        % use only the encoder from the trained network
         function features = encode(obj,images)
             imr = reshape(images, 28,28,1,[]);
             features = activations(obj.net, imr, obj.encoderLayer);
         end
-
+        
+        %use only the decoder from the trained network
         function output = decode(obj, features)
             featr = reshape(features, 1, 1, obj.hiddenSize, []);
             output = obj.decoder.predict(featr);
